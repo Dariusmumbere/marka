@@ -58,6 +58,7 @@ log = logging.getLogger("marka")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_API_VERSION = os.getenv("GEMINI_API_VERSION", "v1beta").strip()
 GEMINI_CONCURRENCY = int(os.getenv("GEMINI_CONCURRENCY", "4"))
 REVIEW_THRESHOLD = float(os.getenv("REVIEW_THRESHOLD", "0.6"))
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
@@ -312,7 +313,10 @@ class GNarrative(BaseModel):
 
 def _client(i: int) -> genai.Client:
     if i not in _clients:
-        _clients[i] = genai.Client(api_key=API_KEYS[i])
+        _clients[i] = genai.Client(
+            api_key=API_KEYS[i],
+            http_options=types.HttpOptions(api_version=GEMINI_API_VERSION),
+        )
     return _clients[i]
 
 
