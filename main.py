@@ -57,7 +57,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger("marka")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
 GEMINI_API_VERSION = os.getenv("GEMINI_API_VERSION", "v1beta").strip()
 GEMINI_CONCURRENCY = int(os.getenv("GEMINI_CONCURRENCY", "4"))
 REVIEW_THRESHOLD = float(os.getenv("REVIEW_THRESHOLD", "0.6"))
