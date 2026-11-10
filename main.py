@@ -584,11 +584,32 @@ async def root():
     return {"service": "Marka API", "docs": "/docs", "health": "/health"}
 
 
-@app.get("/health")
-async def health():
-    async with POOL.acquire() as conn:
-        await conn.fetchval("SELECT 1")
-    return {"status": "ok", "database": "connected", "gemini_keys": len(API_KEYS), "model": GEMINI_MODEL}
+@app.api_route("/ping", methods=["GET", "HEAD"])
+async def ping():
+    """Lightweight liveness check for cron pings (keeps Render awake). Does not touch the database."""
+    return {"status": "ok", "time": _utcnow()}
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health(response: Response):
+    """Readiness check for cronjobs/uptime monitors. Pings the DB (also wakes Neon from idle).
+    Returns 200 when healthy, 503 when the database is unreachable so monitors can alert."""
+    db_ok = False
+    try:
+        async with POOL.acquire(timeout=10) as conn:
+            await asyncio.wait_for(conn.fetchval("SELECT 1"), timeout=10)
+        db_ok = True
+    except Exception as e:  # noqa: BLE001
+        log.warning("Health check: database unreachable: %s", e)
+    if not db_ok:
+        response.status_code = 503
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "database": "connected" if db_ok else "unreachable",
+        "gemini_keys": len(API_KEYS),
+        "model": GEMINI_MODEL,
+        "time": _utcnow(),
+    }
 
 
 # --------------------------------------------------------------------------- #
